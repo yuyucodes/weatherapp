@@ -1,0 +1,308 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, viewport-fit=cover">
+    <meta name="claude:viewport-fit-sides" content="cover">
+    <title>Weather</title>
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+    <link href="https://fonts.googleapis.com/css2?family=Geist:wght@300;400;500;600;700;800&display=swap" rel="stylesheet">
+    <style>
+        /* Layout: centered single column, 2-col card grid above 560px */
+
+        :root {
+            /* Palette: warm light — white ground, orange accent */
+            --bg:           #FBF9F7;
+            --surface:      #FFFFFF;
+            --border:       #E5E0DA;
+            --text:         #1A1612;
+            --text-muted:   #7A6F66;
+            --accent:       #E05C1A;
+            --accent-bg:    #FDF0E8;
+            color-scheme: light;
+        }
+
+        *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+
+        body {
+            font-family: 'Geist', system-ui, sans-serif;
+            background: var(--bg);
+            color: var(--text);
+            padding-left:  max(20px, env(safe-area-inset-left,  0px));
+            padding-right: max(20px, env(safe-area-inset-right, 0px));
+            padding-bottom: max(40px, env(safe-area-inset-bottom, 0px));
+        }
+
+        .page {
+            max-width: 720px;
+            margin: 0 auto;
+        }
+
+        /* ── Header ── */
+        header {
+            padding-block: 44px 36px;
+            border-bottom: 1px solid var(--border);
+            margin-bottom: 36px;
+        }
+
+        .site-name {
+            font-family: 'Geist', sans-serif;
+            font-weight: 800;
+            font-size: clamp(1.75rem, 5vw, 2.4rem);
+            letter-spacing: -0.025em;
+            line-height: 1;
+            color: var(--text);
+        }
+
+        .site-desc {
+            margin-top: 7px;
+            font-size: 0.875rem;
+            font-weight: 400;
+            color: var(--text-muted);
+        }
+
+        /* ── Add-city form ── */
+        .add-section {
+            margin-bottom: 40px;
+        }
+
+        .field-label {
+            display: block;
+            font-size: 0.75rem;
+            font-weight: 600;
+            letter-spacing: 0.07em;
+            text-transform: uppercase;
+            color: var(--text-muted);
+            margin-bottom: 8px;
+        }
+
+        .form-row {
+            display: flex;
+            gap: 8px;
+        }
+
+        .city-input {
+            flex: 1;
+            min-width: 0;
+            padding: 10px 14px;
+            font-family: inherit;
+            font-size: 1rem;
+            color: var(--text);
+            background: var(--surface);
+            border: 1.5px solid var(--border);
+            border-radius: 8px;
+            outline: none;
+            transition: border-color 0.15s, box-shadow 0.15s;
+        }
+
+        .city-input::placeholder { color: var(--text-muted); opacity: 0.65; }
+
+        .city-input:focus {
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px var(--accent-bg);
+        }
+
+        .add-btn {
+            padding: 10px 22px;
+            font-family: inherit;
+            font-size: 0.875rem;
+            font-weight: 600;
+            background: var(--accent);
+            color: #fff;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            white-space: nowrap;
+            transition: opacity 0.15s;
+        }
+
+        .add-btn:hover { opacity: 0.85; }
+
+        .add-btn:focus-visible {
+            outline: 3px solid var(--accent);
+            outline-offset: 3px;
+        }
+
+        /* ── City grid ── */
+        .city-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 14px;
+        }
+
+        /* ── Card ── */
+        .city-card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 12px;
+            padding: 20px 22px 22px;
+            position: relative;
+        }
+
+        .delete-btn {
+            position: absolute;
+            top: 10px;
+            right: 10px;
+            width: 28px;
+            height: 28px;
+            border: none;
+            border-radius: 6px;
+            background: transparent;
+            color: var(--text-muted);
+            cursor: pointer;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            opacity: 0;
+            transition: opacity 0.15s, background 0.15s, color 0.15s;
+            padding: 0;
+        }
+
+        .city-card:hover .delete-btn,
+        .city-card:focus-within .delete-btn {
+            opacity: 1;
+        }
+
+        .delete-btn:hover {
+            background: #FEE8E8;
+            color: #C0392B;
+        }
+
+        .delete-btn:focus-visible {
+            outline: 2px solid var(--accent);
+            outline-offset: 2px;
+            opacity: 1;
+        }
+
+        .delete-btn svg {
+            pointer-events: none;
+        }
+
+        .card-header {
+            display: flex;
+            justify-content: space-between;
+            align-items: flex-start;
+            gap: 8px;
+            margin-bottom: 10px;
+        }
+
+        .city-name {
+            font-size: 1.05rem;
+            font-weight: 600;
+            color: var(--text);
+            line-height: 1.3;
+            text-wrap: balance;
+        }
+
+        .weather-icon {
+            width: 52px;
+            height: 52px;
+            flex-shrink: 0;
+            margin-top: -4px;
+        }
+
+        .temp {
+            font-size: 2.8rem;
+            font-weight: 300;
+            line-height: 1;
+            color: var(--text);
+            font-variant-numeric: tabular-nums;
+            letter-spacing: -0.02em;
+        }
+
+        .temp-unit {
+            font-size: 1.3rem;
+            font-weight: 400;
+            color: var(--text-muted);
+            margin-left: 1px;
+        }
+
+        .condition {
+            margin-top: 6px;
+            font-size: 0.84rem;
+            color: var(--text-muted);
+            text-transform: capitalize;
+        }
+
+        /* ── Empty state ── */
+        .empty-state {
+            color: var(--text-muted);
+            font-size: 0.95rem;
+            padding: 8px 0;
+        }
+
+        /* ── Motion ── */
+        @media (prefers-reduced-motion: no-preference) {
+            .city-card {
+                animation: rise 0.22s ease both;
+            }
+        }
+
+        @keyframes rise {
+            from { opacity: 0; transform: translateY(6px); }
+            to   { opacity: 1; transform: translateY(0); }
+        }
+    </style>
+</head>
+<body>
+    <div class="page">
+        <header>
+            <h1 class="site-name">Weather</h1>
+            <p class="site-desc">Current conditions for tracked cities</p>
+        </header>
+
+        <main>
+            <section class="add-section" aria-labelledby="add-label">
+                <form method="POST" novalidate>
+                    {% csrf_token %}
+                    <label class="field-label" id="add-label" for="id_name">Add a city</label>
+                    <div class="form-row">
+                        {{ form.name }}
+                        <button class="add-btn" type="submit">Add</button>
+                    </div>
+                </form>
+            </section>
+
+            <section aria-label="City weather cards">
+                {% if weather_data %}
+                <div class="city-grid">
+                    {% for weather in weather_data %}
+                    <article class="city-card">
+                        <form method="POST" action="{% url 'delete_city' weather.city.id %}">
+                            {% csrf_token %}
+                            <button
+                                class="delete-btn"
+                                type="submit"
+                                aria-label="Remove {{ weather.city }}"
+                            >
+                                <svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true">
+                                    <path d="M1 1l12 12M13 1L1 13" stroke="currentColor" stroke-width="1.75" stroke-linecap="round"/>
+                                </svg>
+                            </button>
+                        </form>
+                        <div class="card-header">
+                            <h2 class="city-name">{{ weather.city }}</h2>
+                            <img
+                                class="weather-icon"
+                                src="https://openweathermap.org/img/wn/{{ weather.icon }}@2x.png"
+                                alt="{{ weather.description }}"
+                                width="52"
+                                height="52"
+                            >
+                        </div>
+                        <p class="temp">
+                            {{ weather.temperature|floatformat:0 }}<span class="temp-unit">°F</span>
+                        </p>
+                        <p class="condition">{{ weather.description }}</p>
+                    </article>
+                    {% endfor %}
+                </div>
+                {% else %}
+                <p class="empty-state">No cities yet — add one above to get started.</p>
+                {% endif %}
+            </section>
+        </main>
+    </div>
+</body>
+</html>
