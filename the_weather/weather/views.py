@@ -30,6 +30,9 @@ def index(request):
 
         city_weather = requests.get(url.format(city)).json()
 
+        if 'main' not in city_weather:
+            continue
+
         weather = {
             'city': city,
             'temperature': city_weather['main']['temp'],
