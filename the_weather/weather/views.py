@@ -1,4 +1,5 @@
 from django.shortcuts import render, redirect, get_object_or_404
+import os
 import requests
 from .models import City
 from .forms import CityForm
@@ -11,7 +12,8 @@ def delete_city(request, city_id):
 
 def index(request):
 
-    url = 'http://api.openweathermap.org/data/2.5/weather?q={}&units=imperial&appid=1dcd0cca12b4270992a7cc3a25761d8d'
+    api_key = os.environ.get('OPENWEATHER_API_KEY', '')
+    url = f'http://api.openweathermap.org/data/2.5/weather?q={{}}&units=imperial&appid={api_key}'
 
     if request.method == 'POST':
         form = CityForm(request.POST)
